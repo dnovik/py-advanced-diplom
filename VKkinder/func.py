@@ -1,8 +1,8 @@
 import requests
 from VKkinder.settings import client_id
+from datetime import datetime
 
-
-token = 'ed6a8d2f9afa3474026da743b59c102f45513d021bb287a1e01d438eb7d45bce5d8a28292bef23de196c6'
+token = '23e76c21921f6d0892dfa162f3c49c9147d784488425508ac52bfb3291a888f64c83a372d93cc0edcaf19'
 
 
 def get_token_url(client_id):
@@ -26,20 +26,33 @@ def get_user_info(username):
     params = {
         'access_token': token,
         'domain': username,
-        'fields' : ['about', 'photo_100'],
-        'v': '5.101'
+        'fields' : 'sex, bdate, books, city, education, interests, movies, music',
+        'v': '5.89'
     }
 
     user_info = requests.get(URL, params)
 
     return user_info.json()
 
+
 def search_users():
     URL = 'https://api.vk.com/method/users.search'
 
+    params = {
+        'age_from' : '',
+        'age_to' : '',
+        'city' : '',
+        'fields' : 'sex, interests, movies, music'
+    }
 
 
-get_user_info('denis.novik')
+
+user_info = get_user_info(token)
+user_age = datetime.now().year - int(user_info['response'][0]['bdate'].split('.')[2])
+age_from = user_age - 5
+age_to = user_age + 5
+
+
 
 #ОБЩИЙ АЛГОРИТМ ПРИЛОЖЕНИЯ
 
