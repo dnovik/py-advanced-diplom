@@ -2,7 +2,7 @@ import requests
 from VKkinder.settings import client_id
 from datetime import datetime
 
-token = '23e76c21921f6d0892dfa162f3c49c9147d784488425508ac52bfb3291a888f64c83a372d93cc0edcaf19'
+token = '9698ecf5d0cc51aded8a386dc6076dad93fe0055382aa9984074893d031bff441a291bb864329aca450ed'
 
 
 def get_token_url(client_id):
@@ -35,23 +35,32 @@ def get_user_info(username):
     return user_info.json()
 
 
-def search_users():
+def search_users(user_info):
     URL = 'https://api.vk.com/method/users.search'
 
+    user_age = datetime.now().year - int(user_info['response'][0]['bdate'].split('.')[2])
+    age_from = user_age - 5
+    age_to = user_age + 5   
+    user_city = user_info['response'][0]['city']['id']
+
     params = {
-        'age_from' : '',
-        'age_to' : '',
-        'city' : '',
-        'fields' : 'sex, interests, movies, music'
+        'access_token': token,
+        'age_from' : age_from,
+        'age_to' : age_to,
+        'city' : user_city,
+        'fields' : 'sex, status, interests, books, movies, music, domain, photo_100, relation, verified,personal, followers_count',
+        'v': '5.89'
     }
 
+    candidates = requests.get(URL, params)
+
+    return candidates
 
 
-user_info = get_user_info(token)
-user_age = datetime.now().year - int(user_info['response'][0]['bdate'].split('.')[2])
-age_from = user_age - 5
-age_to = user_age + 5
+user_info = get_user_info('denis.novik')
+results = search_users(user_info)
 
+results.json()
 
 
 #ОБЩИЙ АЛГОРИТМ ПРИЛОЖЕНИЯ
