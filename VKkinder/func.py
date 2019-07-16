@@ -1,8 +1,9 @@
 import requests
 from VKkinder.settings import client_id
 from datetime import datetime
+import pandas as pd
 
-token = '9698ecf5d0cc51aded8a386dc6076dad93fe0055382aa9984074893d031bff441a291bb864329aca450ed'
+token = 'a411bfb8349a25ad58e81d001f0653541c3a49c0174deed87b68e109b385bbb8edd3480567d304c9356a3'
 
 
 def get_token_url(client_id):
@@ -36,6 +37,7 @@ def get_user_info(username):
 
 
 def search_users(user_info):
+
     URL = 'https://api.vk.com/method/users.search'
 
     user_age = datetime.now().year - int(user_info['response'][0]['bdate'].split('.')[2])
@@ -49,18 +51,78 @@ def search_users(user_info):
         'age_to' : age_to,
         'city' : user_city,
         'fields' : 'sex, status, interests, books, movies, music, domain, photo_100, relation, verified,personal, followers_count',
-        'v': '5.89'
+        'v': '5.101'
     }
 
-    candidates = requests.get(URL, params)
+    result = requests.get(URL, params).json()
+
+    return result
+
+
+def get_found_users(search_result):
+
+    candidates = []
+
+    for candidate in result['response']['items']:
+        candidates.append(
+            {
+                'user_id' : candidate['id'],
+                'books' : candidate['books'],
+                'first_name' : candidate['first_name'],
+                'last_name' : candidate['last_name'],
+                'movies' : candidate['movies'],
+                'music' : candidate['music'],
+                'alcohol' : candidate['personal']['alcohol'],
+                'langs' : candidate['personal']['langs'],
+                'life_main' : candidate['personal']['life_main'],
+                'people_main' : candidate['personal']['people_main'],
+                'political' : candidate['personal']['political'],
+                'smoking' : candidate['personal']['smoking'],
+                'relation' : candidate['relation'],
+                'sex' : candidate['sex'],
+                'photo_100' : candidate['photo_100']
+            }
+        )
 
     return candidates
 
 
-user_info = get_user_info('denis.novik')
-results = search_users(user_info)
+if __name__ == "__main__":
+    
+    user_info = get_user_info('denis.novik')
+    search_result = search_users(user_info)
+    candidates = get_found_users(search_result)
 
-results.json()
+
+
+candidates = []
+
+for candidate in search_result['response']['items']:
+    try:
+        candidates.append(
+                {
+                    'user_id' : candidate['id'],
+                    'books' : candidate['books'],
+                    'first_name' : candidate['first_name'],
+                    'last_name' : candidate['last_name'],
+                    'movies' : candidate['movies'],
+                    'music' : candidate['music'],
+                    'alcohol' : candidate['personal']['alcohol'],
+                    'langs' : candidate['personal']['langs'],
+                    'life_main' : candidate['personal']['life_main'],
+                    'people_main' : candidate['personal']['people_main'],
+                    'political' : candidate['personal']['political'],
+                    'smoking' : candidate['personal']['smoking'],
+                    'relation' : candidate['relation'],
+                    'sex' : candidate['sex'],
+                    'photo_100' : candidate['photo_100']
+                    }
+        )
+    except KeyError as err:
+        candidate[err] = 'nan'
+
+candidates
+
 
 
 #ОБЩИЙ АЛГОРИТМ ПРИЛОЖЕНИЯ
