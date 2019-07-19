@@ -3,9 +3,12 @@ from VKkinder.settings import client_id
 from datetime import datetime
 import pandas as pd
 import time
+from pymongo import MongoClient
 
 token = '9d1f99036a789cdcdb41c8b590ec6e528a5c09e4deb78a65ae158862e51c1948edf03f90071dd5a194606'
-
+client = MongoClient('localhost', 27017)
+my_database = client.VKkinder
+meet_collection = my_database['SweetMeet']
 
 def get_token_url(client_id):
     URL = 'https://oauth.vk.com/authorize'
@@ -66,6 +69,7 @@ def search_users(user_info):
         params = {
             'access_token': token,
             'sort' : 1,
+            'count' : 200,
             'age_from' : start_age,
             'age_to' : end_age,
             'city' : user_city,
@@ -92,7 +96,7 @@ def get_found_users(search_result):
     for candidate in search_result:
 
         candidates.append(
-                    {
+            {
                         'user_id' : candidate.get('id'),
                         'bdate' : candidate.get('bdate'),
                         'books' : candidate.get('books'),
@@ -118,17 +122,18 @@ def get_found_users(search_result):
 
 
 if __name__ == "__main__":
-    
+    # получаем информацию о пользователе для которого делаем запрос
     user_info = get_user_info('denis.novik')
+    # выполняем запрос
     search_result = search_users(user_info)
+    # пишем данные в базу
+    meet_collection.insert_many(search_result)
     candidates = pd.DataFrame(get_found_users(search_result))
     candidates = candidates[[
         'user_id', 'first_name', 'last_name', 
         'bdate', 'city', 'sex', 'religion', 'relation', 'alcohol',  'smoking', 'life_main', 
         'people_main', 'political', 'langs', 'movies', 'music', 'photo_100']]
     free_persons = candidates[candidates['relation'].isin([1,6])]
-
-free_persons
 
 
 
@@ -168,3 +173,7 @@ life_main (integer) — главное в жизни. Возможные зна�
 8 — слава и влияние;
 '''
 
+# TO DO 
+# Написать функцию получения id пользователя 
+# Написать функцию получения трех фото пользователя на основе лайка
+# Написать функцию получения списка групп и добавления их в базу 
